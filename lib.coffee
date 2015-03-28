@@ -20,6 +20,9 @@ class BaseComponent
 
     @components[componentName] = componentClass
 
+    # To allow chaining.
+    @
+
   @getComponent: (componentName) ->
     @components[componentName] or null
 
@@ -30,7 +33,10 @@ class BaseComponent
   # componentName class method manually on the new class of this new component.
   @componentName: (componentName) ->
     # Setter.
-    @_componentName = componentName if componentName
+    if componentName
+      @_componentName = componentName
+      # To allow chaining.
+      return @
 
     # Getter.
     @_componentName or null
