@@ -1,6 +1,6 @@
 Package.describe({
   name: 'peerlibrary:base-component',
-  summary: "Base component for Meteor components",
+  summary: "Base component for reusable Meteor components",
   version: '0.1.0',
   git: 'https://github.com/peerlibrary/meteor-base-component.git',
   documentation: null
