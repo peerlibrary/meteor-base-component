@@ -16,7 +16,7 @@ class BaseComponent
       throw new Error "Component '#{ componentName }' already registered under the name '#{ componentClass.componentName() }'."
 
     componentClass.componentName componentName
-    assert componentClass.componentName() is componentName
+    assert.equal componentClass.componentName(), componentName
 
     @components[componentName] = componentClass
 
@@ -43,6 +43,7 @@ class BaseComponent
 
   # We allow access to the component name through a method so that it can be accessed in templates in an easy way.
   componentName: ->
+    # Instance method is just a getter, not a setter as well.
     @constructor.componentName()
 
   @renderComponent: ->
