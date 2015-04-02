@@ -11,7 +11,8 @@ Package.onUse(function (api) {
 
   // Core dependencies.
   api.use([
-    'coffeescript'
+    'coffeescript',
+    'reactive-var'
   ]);
 
   // 3rd party dependencies.

@@ -1,3 +1,16 @@
+# Comparing arrays of components by reference. This might not be really necessary
+# to do, because all operations we officially support modify length of the array
+# (add a new component or remove an old one). But if somebody is modifying the
+# reactive variable directly we want a sane behavior. The default ReactiveVar
+# equality always returns false when comparing any non-primitive values.
+arrayReferenceEquals = (a, b) ->
+  return false if a.length isnt b.length
+
+  for i in [0...a.length]
+    return false if a[i] isnt b[i]
+
+  true
+
 class BaseComponent
   @components: {}
 
@@ -47,30 +60,38 @@ class BaseComponent
     @constructor.componentName()
 
   componentChildren: ->
-    @_componentChildren or []
+    @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentChildren.get()
 
   addComponentChild: (componentChild) ->
-    @_componentChildren ?= []
-    @_componentChildren.push componentChild
+    @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentChildren.set Tracker.nonreactive =>
+      @_componentChildren.get().concat [componentChild]
 
     # To allow chaining.
     @
 
   removeComponentChild: (componentChild) ->
-    @_componentChildren = _.without @_componentChildren, componentChild
+    @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentChildren.set Tracker.nonreactive =>
+      _.without @_componentChildren.get(), componentChild
 
     # To allow chaining.
     @
 
   componentParent: (componentParent) ->
+    # We use reference equality here. This makes reactivity not invalidate the
+    # computation if the same component instance (by reference) is set as a parent.
+    @_componentParent ?= new ReactiveVar null, (a, b) -> a is b
+
     # Setter.
     unless _.isUndefined componentParent
-      @_componentParent = componentParent
+      @_componentParent.set componentParent
       # To allow chaining.
       return @
 
     # Getter.
-    @_componentParent or null
+    @_componentParent.get()
 
   @renderComponent: (componentParent) ->
     throw new Error "Not implemented"
