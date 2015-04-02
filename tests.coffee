@@ -76,4 +76,20 @@ class BasicTestCase extends ClassyTestCase
     ,
       /Component 'OtherDummyComponent' already registered under the name 'DummyComponent'/
 
+  testChildren: =>
+    component = new DummyComponent()
+    parentComponent = new UnregisteredComponent()
+
+    component.componentParent parentComponent
+    parentComponent.addComponentChild component
+
+    @assertEqual component.componentParent(), parentComponent
+    @assertEqual parentComponent.componentChildren(), [component]
+
+    component.componentParent null
+    parentComponent.removeComponentChild component
+
+    @assertEqual component.componentParent(), null
+    @assertEqual parentComponent.componentChildren(), []
+
 ClassyTestCase.addTest new BasicTestCase()

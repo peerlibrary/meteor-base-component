@@ -46,8 +46,34 @@ class BaseComponent
     # Instance method is just a getter, not a setter as well.
     @constructor.componentName()
 
-  @renderComponent: ->
-    throw new Error "Not implemented."
+  componentChildren: ->
+    @_componentChildren or []
 
-  renderComponent: ->
-    throw new Error "Not implemented."
+  addComponentChild: (componentChild) ->
+    @_componentChildren ?= []
+    @_componentChildren.push componentChild
+
+    # To allow chaining.
+    @
+
+  removeComponentChild: (componentChild) ->
+    @_componentChildren = _.without @_componentChildren, componentChild
+
+    # To allow chaining.
+    @
+
+  componentParent: (componentParent) ->
+    # Setter.
+    unless _.isUndefined componentParent
+      @_componentParent = componentParent
+      # To allow chaining.
+      return @
+
+    # Getter.
+    @_componentParent or null
+
+  @renderComponent: (componentParent) ->
+    throw new Error "Not implemented"
+
+  renderComponent: (componentParent) ->
+    throw new Error "Not implemented"
