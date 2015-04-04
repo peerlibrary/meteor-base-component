@@ -12,7 +12,9 @@ Package.onUse(function (api) {
   // Core dependencies.
   api.use([
     'coffeescript',
-    'reactive-var'
+    'reactive-var',
+    'tracker',
+    'underscore'
   ]);
 
   // 3rd party dependencies.

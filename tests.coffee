@@ -1,4 +1,10 @@
 class DummyComponent extends BaseComponent
+  constructor: (field) ->
+    @field = field
+
+  fieldValue: ->
+    @field
+
   @renderComponent: ->
     new @().renderComponent()
 
@@ -77,19 +83,91 @@ class BasicTestCase extends ClassyTestCase
       /Component 'OtherDummyComponent' already registered under the name 'DummyComponent'/
 
   testChildren: =>
-    component = new DummyComponent()
+    component = new DummyComponent 'foobar'
     parentComponent = new UnregisteredComponent()
+
+    results = []
+    handle = Tracker.autorun =>
+      results.push parentComponent.componentChildren()
+
+    resultsWith = []
+    handleWith = Tracker.autorun =>
+      resultsWith.push parentComponent.componentChildrenWith(field: 'foobar')
 
     component.componentParent parentComponent
     parentComponent.addComponentChild component
 
     @assertEqual component.componentParent(), parentComponent
     @assertEqual parentComponent.componentChildren(), [component]
+    @assertEqual parentComponent.componentChildren(component), [component]
+    @assertEqual parentComponent.componentChildren(parentComponent), []
+    @assertEqual parentComponent.componentChildren(DummyComponent), [component]
+    @assertEqual parentComponent.componentChildren(UnregisteredComponent), []
+    @assertEqual parentComponent.componentChildren('DummyComponent'), [component]
+    @assertEqual parentComponent.componentChildren('UnregisteredComponent'), []
+    @assertEqual parentComponent.componentChildrenWith('field'), [component]
+    @assertEqual parentComponent.componentChildrenWith('fieldValue'), [component]
+    @assertEqual parentComponent.componentChildrenWith('nonexisting'), []
+    @assertEqual parentComponent.componentChildrenWith(field: 'foobar'), [component]
+    @assertEqual parentComponent.componentChildrenWith(field: 'faabar'), []
+    @assertEqual parentComponent.componentChildrenWith(fieldValue: 'foobar'), [component]
+    @assertEqual parentComponent.componentChildrenWith(fieldValue: 'faabar'), []
+
+    self = @
+
+    @assertEqual parentComponent.componentChildrenWith(
+      (child) ->
+        self.assertEqual @, parentComponent
+        self.assertEqual child, component
+        true
+    ), [component]
+    @assertEqual parentComponent.componentChildrenWith((child) -> false), []
+
+    Tracker.flush()
 
     component.componentParent null
     parentComponent.removeComponentChild component
 
     @assertEqual component.componentParent(), null
     @assertEqual parentComponent.componentChildren(), []
+    @assertEqual parentComponent.componentChildren(component), []
+    @assertEqual parentComponent.componentChildren(DummyComponent), []
+    @assertEqual parentComponent.componentChildren(UnregisteredComponent), []
+    @assertEqual parentComponent.componentChildren('DummyComponent'), []
+    @assertEqual parentComponent.componentChildren('UnregisteredComponent'), []
+    @assertEqual parentComponent.componentChildrenWith('field'), []
+    @assertEqual parentComponent.componentChildrenWith('fieldValue'), []
+    @assertEqual parentComponent.componentChildrenWith('nonexisting'), []
+    @assertEqual parentComponent.componentChildrenWith(field: 'foobar'), []
+    @assertEqual parentComponent.componentChildrenWith(field: 'faabar'), []
+    @assertEqual parentComponent.componentChildrenWith(fieldValue: 'foobar'), []
+    @assertEqual parentComponent.componentChildrenWith(fieldValue: 'faabar'), []
+
+    Tracker.flush()
+
+    componentZoobar = new DummyComponent 'zoobar'
+
+    componentZoobar.componentParent parentComponent
+    parentComponent.addComponentChild componentZoobar
+
+    Tracker.flush()
+
+    handle.stop()
+    handleWith.stop()
+
+    @assertEqual results, [
+      []
+      [component]
+      []
+      [componentZoobar]
+    ]
+
+    @assertEqual resultsWith, [
+      []
+      [component]
+      []
+      # One less entry than in "results" because "foobar" does not match "zoobar", and the
+      # result is the same, an empty array, so reactive computation is not invalidated.
+    ]
 
 ClassyTestCase.addTest new BasicTestCase()

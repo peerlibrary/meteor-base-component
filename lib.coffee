@@ -2,7 +2,10 @@
 # to do, because all operations we officially support modify length of the array
 # (add a new component or remove an old one). But if somebody is modifying the
 # reactive variable directly we want a sane behavior. The default ReactiveVar
-# equality always returns false when comparing any non-primitive values.
+# equality always returns false when comparing any non-primitive values. Because
+# the order of components in the children array is arbitrary we could further
+# improve this comparison to compare arrays as sets, ignoring the order. Or we
+# could have some canonical order of components in the array.
 arrayReferenceEquals = (a, b) ->
   return false if a.length isnt b.length
 
@@ -10,6 +13,36 @@ arrayReferenceEquals = (a, b) ->
     return false if a[i] isnt b[i]
 
   true
+
+# Similar idea to https://github.com/awwx/meteor-isolate-value. We want to make
+# sure that internal reactive dependency inside function fn really changes the result
+# of function fn before we trigger an outside reactive computation invalidation. The
+# downside is that function fn is called twice if the result changes (once to
+# check if the outside reactive computation should be invalidated and the second time
+# when the outside reactive computation is rerun afterwards). Function fn should not
+# have any side effects.
+isolateValue = (fn) ->
+  # If not called in a reactive computation, do nothing special.
+  return fn() unless Tracker.active
+
+  lastValue = null
+  dependency = new Tracker.Dependency()
+
+  # This autorun is nested in the outside autorun so it gets stopped
+  # automatically when the outside autorun gets invalidated.
+  Tracker.autorun (computation) ->
+    value = fn()
+
+    if computation.firstRun
+      lastValue = value
+    else
+      # We use arrayReferenceEquals here for our use case, because
+      # we are using it with a component children array.
+      dependency.changed() unless arrayReferenceEquals value, lastValue
+
+  dependency.depend()
+
+  lastValue
 
 class BaseComponent
   @components: {}
@@ -59,9 +92,51 @@ class BaseComponent
     # Instance method is just a getter, not a setter as well.
     @constructor.componentName()
 
-  componentChildren: ->
+  # The order of components is arbitrary and does not necessary match siblings relations in DOM.
+  # nameOrComponent is optional and it limits the returned children only to those.
+  componentChildren: (nameOrComponent) ->
     @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
-    @_componentChildren.get()
+
+    # Quick path.
+    return @_componentChildren.get() unless nameOrComponent
+
+    if _.isString nameOrComponent
+      @componentChildrenWith (child) =>
+        child.componentName() is nameOrComponent
+    else
+      @componentChildrenWith (child) =>
+        # nameOrComponent is a class.
+        return true if child.constructor is nameOrComponent
+
+        # nameOrComponent is an instance, or something else.
+        return true if child is nameOrComponent
+
+        false
+
+  # The order of components is arbitrary and does not necessary match siblings relations in DOM.
+  # Returns children which pass a predicate function.
+  componentChildrenWith: (propertyOrMatcherOrFunction) ->
+    if _.isString propertyOrMatcherOrFunction
+      property = propertyOrMatcherOrFunction
+      propertyOrMatcherOrFunction = (child) =>
+        property of child
+
+    else if not _.isFunction propertyOrMatcherOrFunction
+      assert _.isObject propertyOrMatcherOrFunction
+      matcher = propertyOrMatcherOrFunction
+      propertyOrMatcherOrFunction = (child) =>
+        for property, value of matcher
+          return false unless property of child
+
+          if _.isFunction child[property]
+            return false unless child[property]() is value
+          else
+            return false unless child[property] is value
+
+        true
+
+    isolateValue =>
+      _.filter @componentChildren(), propertyOrMatcherOrFunction, @
 
   addComponentChild: (componentChild) ->
     @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
