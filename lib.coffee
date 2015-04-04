@@ -101,10 +101,10 @@ class BaseComponent
     return @_componentChildren.get() unless nameOrComponent
 
     if _.isString nameOrComponent
-      @componentChildrenWith (child) =>
+      @componentChildrenWith (child, parent) =>
         child.componentName() is nameOrComponent
     else
-      @componentChildrenWith (child) =>
+      @componentChildrenWith (child, parent) =>
         # nameOrComponent is a class.
         return true if child.constructor is nameOrComponent
 
@@ -118,13 +118,13 @@ class BaseComponent
   componentChildrenWith: (propertyOrMatcherOrFunction) ->
     if _.isString propertyOrMatcherOrFunction
       property = propertyOrMatcherOrFunction
-      propertyOrMatcherOrFunction = (child) =>
+      propertyOrMatcherOrFunction = (child, parent) =>
         property of child
 
     else if not _.isFunction propertyOrMatcherOrFunction
       assert _.isObject propertyOrMatcherOrFunction
       matcher = propertyOrMatcherOrFunction
-      propertyOrMatcherOrFunction = (child) =>
+      propertyOrMatcherOrFunction = (child, parent) =>
         for property, value of matcher
           return false unless property of child
 
@@ -136,7 +136,7 @@ class BaseComponent
         true
 
     isolateValue =>
-      _.filter @componentChildren(), propertyOrMatcherOrFunction, @
+      child for child in @componentChildren() when propertyOrMatcherOrFunction.call @, child, @
 
   addComponentChild: (componentChild) ->
     @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
