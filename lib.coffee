@@ -173,3 +173,26 @@ class BaseComponent
 
   renderComponent: (componentParent) ->
     throw new Error "Not implemented"
+
+  @extendComponent: (constructor, methods) ->
+    currentClass = @
+
+    unless _.isFunction constructor
+      methods = constructor
+      constructor = ->
+        constructor.__super__.constructor.apply @, arguments
+
+    constructor:: = Object.create currentClass::
+    constructor::constructor = constructor
+
+    # We use "own" here because this is how CoffeeScript extends the class.
+    for own property, value of currentClass
+      constructor[property] = value
+    constructor.__super__ = currentClass::
+
+    # We expect the plain object of methods here, but if something
+    # else is passed, we use only "own" properties.
+    for own property, value of methods or {}
+      constructor::[property] = value
+
+    constructor
