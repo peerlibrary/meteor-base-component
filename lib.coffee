@@ -97,8 +97,8 @@ class BaseComponent
   componentChildren: (nameOrComponent) ->
     @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
 
-    # Quick path.
-    return @_componentChildren.get() unless nameOrComponent
+    # Quick path. Returns a shallow copy.
+    return (child for child in @_componentChildren.get()) unless nameOrComponent
 
     if _.isString nameOrComponent
       @componentChildrenWith (child, parent) =>
