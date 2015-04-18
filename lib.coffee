@@ -78,16 +78,14 @@ class BaseComponent
   # they would have by default. Probably component name should be set in the constructor for such classes, or by calling
   # componentName class method manually on the new class of this new component.
   @componentName: (componentName) ->
-    @_componentInternals ?= {}
-
     # Setter.
     if componentName
-      @_componentInternals.componentName = componentName
+      @_componentName = componentName
       # To allow chaining.
       return @
 
     # Getter.
-    @_componentInternals.componentName or null
+    @_componentName or null
 
   # We allow access to the component name through a method so that it can be accessed in templates in an easy way.
   componentName: ->
