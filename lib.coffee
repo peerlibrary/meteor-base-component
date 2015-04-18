@@ -78,14 +78,16 @@ class BaseComponent
   # they would have by default. Probably component name should be set in the constructor for such classes, or by calling
   # componentName class method manually on the new class of this new component.
   @componentName: (componentName) ->
+    @_componentInternals ?= {}
+
     # Setter.
     if componentName
-      @_componentName = componentName
+      @_componentInternals.componentName = componentName
       # To allow chaining.
       return @
 
     # Getter.
-    @_componentName or null
+    @_componentInternals.componentName or null
 
   # We allow access to the component name through a method so that it can be accessed in templates in an easy way.
   componentName: ->
@@ -95,10 +97,11 @@ class BaseComponent
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # nameOrComponent is optional and it limits the returned children only to those.
   componentChildren: (nameOrComponent) ->
-    @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentInternals ?= {}
+    @_componentInternals.componentChildren ?= new ReactiveVar [], arrayReferenceEquals
 
     # Quick path. Returns a shallow copy.
-    return (child for child in @_componentChildren.get()) unless nameOrComponent
+    return (child for child in @_componentInternals.componentChildren.get()) unless nameOrComponent
 
     if _.isString nameOrComponent
       @componentChildrenWith (child, parent) =>
@@ -139,34 +142,37 @@ class BaseComponent
       child for child in @componentChildren() when propertyOrMatcherOrFunction.call @, child, @
 
   addComponentChild: (componentChild) ->
-    @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
-    @_componentChildren.set Tracker.nonreactive =>
-      @_componentChildren.get().concat [componentChild]
+    @_componentInternals ?= {}
+    @_componentInternals.componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentInternals.componentChildren.set Tracker.nonreactive =>
+      @_componentInternals.componentChildren.get().concat [componentChild]
 
     # To allow chaining.
     @
 
   removeComponentChild: (componentChild) ->
-    @_componentChildren ?= new ReactiveVar [], arrayReferenceEquals
-    @_componentChildren.set Tracker.nonreactive =>
-      _.without @_componentChildren.get(), componentChild
+    @_componentInternals ?= {}
+    @_componentInternals.componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentInternals.componentChildren.set Tracker.nonreactive =>
+      _.without @_componentInternals.componentChildren.get(), componentChild
 
     # To allow chaining.
     @
 
   componentParent: (componentParent) ->
+    @_componentInternals ?= {}
     # We use reference equality here. This makes reactivity not invalidate the
     # computation if the same component instance (by reference) is set as a parent.
-    @_componentParent ?= new ReactiveVar null, (a, b) -> a is b
+    @_componentInternals.componentParent ?= new ReactiveVar null, (a, b) -> a is b
 
     # Setter.
     unless _.isUndefined componentParent
-      @_componentParent.set componentParent
+      @_componentInternals.componentParent.set componentParent
       # To allow chaining.
       return @
 
     # Getter.
-    @_componentParent.get()
+    @_componentInternals.componentParent.get()
 
   @renderComponent: (componentParent) ->
     throw new Error "Not implemented"
