@@ -140,8 +140,18 @@ class BaseComponent
     # To allow chaining.
     @
 
-  @getComponent: (componentName) ->
-    getComponent @components, componentName
+  @getComponent: (componentsNamespace, componentName) ->
+    unless componentName
+      componentName = componentsNamespace
+      componentsNamespace = @components
+
+    # If component is missing, just return a null.
+    return null unless componentName
+
+    # But otherwise throw an exception.
+    throw new Error "Component name '#{ componentName }' is not a string." unless _.isString componentName
+
+    getComponent componentsNamespace, componentName
 
   # Component name is set in the register class method. If not using a registered component and a component name is
   # wanted, component name has to be set manually or this class method should be overridden with a custom implementation.

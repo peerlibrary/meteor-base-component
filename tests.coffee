@@ -99,6 +99,16 @@ class BasicTestCase extends ClassyTestCase
 
     @assertEqual result, "Hello world."
 
+    # And a namespaced component with explicit namespace.
+
+    result = BaseComponent.getComponent(BaseComponent.components.MyNamespace, 'MyComponent').renderComponent()
+
+    @assertEqual result, "Hello world."
+
+    result = new (BaseComponent.getComponent(BaseComponent.components.MyNamespace, 'MyComponent'))().renderComponent()
+
+    @assertEqual result, "Hello world."
+
   testErrors: =>
     @assertThrows =>
       BaseComponent.register()
@@ -114,6 +124,11 @@ class BasicTestCase extends ClassyTestCase
       BaseComponent.register 'OtherDummyComponent', DummyComponent
     ,
       /Component 'OtherDummyComponent' already registered under the name 'DummyComponent'/
+
+    @assertThrows =>
+      BaseComponent.getComponent {}
+    ,
+      /Component name '\[object Object\]' is not a string/
 
   testChildren: =>
     component = new DummyComponent 'foobar'
