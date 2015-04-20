@@ -44,10 +44,11 @@ isolateValue = (fn) ->
 
   lastValue
 
-# We have a special field for components. This allows us to have the namespace with the same name
-# as a component, without overriding anything in the component (we do not want to use component
-# object as a namespace object).
-COMPONENTS_FIELD = ''
+class ComponentsNamespace
+  # We have a special field for components. This allows us to have the namespace with the same name
+  # as a component, without overriding anything in the component (we do not want to use component
+  # object as a namespace object).
+  @COMPONENTS_FIELD: ''
 
 getPathAndName = (name) ->
   assert name
@@ -81,7 +82,7 @@ createNamespace = (components, path) ->
   match = components
 
   while (segment = path.shift())?
-    match[segment] = {} unless segment of match
+    match[segment] = new components.constructor() unless segment of match
     match = match[segment]
     assert _.isObject match
 
@@ -99,7 +100,7 @@ getComponent = (components, name) ->
   namespace = getNamespace components, path
   return null unless namespace
 
-  namespace[COMPONENTS_FIELD]?[name] or null
+  namespace[components.constructor.COMPONENTS_FIELD]?[name] or null
 
 setComponent = (components, name, component) ->
   assert _.isObject components
@@ -110,12 +111,12 @@ setComponent = (components, name, component) ->
 
   namespace = createNamespace components, path
 
-  namespace[COMPONENTS_FIELD] ?= {}
-  assert name not of namespace[COMPONENTS_FIELD]
-  namespace[COMPONENTS_FIELD][name] = component
+  namespace[components.constructor.COMPONENTS_FIELD] ?= new components.constructor()
+  assert name not of namespace[components.constructor.COMPONENTS_FIELD]
+  namespace[components.constructor.COMPONENTS_FIELD][name] = component
 
 class BaseComponent
-  @components: {}
+  @components: new ComponentsNamespace()
 
   @register: (componentName, componentClass) ->
     throw new Error "Component name is required for registration." unless componentName
