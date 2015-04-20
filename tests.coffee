@@ -26,6 +26,18 @@ class SelfNameUnregisteredComponent extends DummyComponent
   # Alternative way of setting the name manually.
   @componentName 'SelfNameUnregisteredComponent'
 
+class MyNamespace
+
+class MyNamespace.MyComponent extends DummyComponent
+  # Alternative way of registering components.
+  @register 'MyNamespace.MyComponent'
+
+class MyNamespaceComponent extends DummyComponent
+  # Probably you could simply have MyNamespace class as a component, but
+  # we want to test if these can be disjoint. Registry should not modify
+  # components and use them as a namespace.
+  @register 'MyNamespace'
+
 class BasicTestCase extends ClassyTestCase
   @testName: 'base-component - basic'
 
@@ -63,6 +75,27 @@ class BasicTestCase extends ClassyTestCase
     @assertEqual result, "Hello world."
 
     result = new SelfNameUnregisteredComponent().renderComponent()
+
+    @assertEqual result, "Hello world."
+
+  testNamespace: =>
+    # To test if a component with the same name as a namespace is reachable.
+
+    result = BaseComponent.getComponent('MyNamespace').renderComponent()
+
+    @assertEqual result, "Hello world."
+
+    result = new (BaseComponent.getComponent('MyNamespace'))().renderComponent()
+
+    @assertEqual result, "Hello world."
+
+    # And a namespaced component.
+
+    result = BaseComponent.getComponent('MyNamespace.MyComponent').renderComponent()
+
+    @assertEqual result, "Hello world."
+
+    result = new (BaseComponent.getComponent('MyNamespace.MyComponent'))().renderComponent()
 
     @assertEqual result, "Hello world."
 

@@ -44,6 +44,76 @@ isolateValue = (fn) ->
 
   lastValue
 
+# We have a special field for components. This allows us to have the namespace with the same name
+# as a component, without overriding anything in the component (we do not want to use component
+# object as a namespace object).
+COMPONENTS_FIELD = ''
+
+getPathAndName = (name) ->
+  assert name
+
+  path = name.split '.'
+
+  name = path.pop()
+
+  assert name
+
+  {path, name}
+
+getNamespace = (components, path) ->
+  assert _.isObject components
+  assert _.isArray path
+
+  match = components
+
+  while (segment = path.shift())?
+    match = match[segment]
+    return null unless _.isObject match
+
+  return null unless _.isObject match
+
+  match or null
+
+createNamespace = (components, path) ->
+  assert _.isObject components
+  assert _.isArray path
+
+  match = components
+
+  while (segment = path.shift())?
+    match[segment] = {} unless segment of match
+    match = match[segment]
+    assert _.isObject match
+
+  assert _.isObject match
+
+  match
+
+getComponent = (components, name) ->
+  assert _.isObject components
+
+  return null unless name
+
+  {path, name} = getPathAndName name
+
+  namespace = getNamespace components, path
+  return null unless namespace
+
+  namespace[COMPONENTS_FIELD]?[name] or null
+
+setComponent = (components, name, component) ->
+  assert _.isObject components
+  assert name
+  assert component
+
+  {path, name} = getPathAndName name
+
+  namespace = createNamespace components, path
+
+  namespace[COMPONENTS_FIELD] ?= {}
+  assert name not of namespace[COMPONENTS_FIELD]
+  namespace[COMPONENTS_FIELD][name] = component
+
 class BaseComponent
   @components: {}
 
@@ -53,24 +123,24 @@ class BaseComponent
     # To allow calling @register 'name' from inside a class body.
     componentClass ?= @
 
-    throw new Error "Component '#{ componentName }' already registered." if componentName of @components
+    throw new Error "Component '#{ componentName }' already registered." if getComponent @components, componentName
 
     # The last condition is to make sure we do not throw the exception when registering a subclass.
     # Subclassed components have at this stage the same component as the parent component, so we have
     # to check if they are the same class. If not, this is not an error, it is a subclass.
-    if componentClass.componentName() and componentClass.componentName() isnt componentName and @components[componentClass.componentName()] is componentClass
+    if componentClass.componentName() and componentClass.componentName() isnt componentName and getComponent(@components, componentClass.componentName()) is componentClass
       throw new Error "Component '#{ componentName }' already registered under the name '#{ componentClass.componentName() }'."
 
     componentClass.componentName componentName
     assert.equal componentClass.componentName(), componentName
 
-    @components[componentName] = componentClass
+    setComponent @components, componentName, componentClass
 
     # To allow chaining.
     @
 
   @getComponent: (componentName) ->
-    @components[componentName] or null
+    getComponent @components, componentName
 
   # Component name is set in the register class method. If not using a registered component and a component name is
   # wanted, component name has to be set manually or this class method should be overridden with a custom implementation.
