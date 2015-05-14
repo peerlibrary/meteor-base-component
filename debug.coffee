@@ -1,4 +1,4 @@
-class @BaseComponentDebug
+class BaseComponentDebug
   @startComponent: (component) ->
     name = component.componentName() or 'unnamed'
     console.group name
