@@ -16,6 +16,8 @@ class BaseComponentDebug
     @endComponent component
 
   @dumpComponentSubtree: (rootComponent, _markComponent=(->)) ->
+    return unless rootComponent
+
     marked = _markComponent rootComponent
 
     if marked
@@ -40,4 +42,6 @@ class BaseComponentDebug
     component
 
   @dumpComponentTree: (component) ->
+    return unless component
+
     @dumpComponentSubtree @componentRoot(component), (c) -> c is component
