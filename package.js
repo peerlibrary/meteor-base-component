@@ -23,10 +23,13 @@ Package.onUse(function (api) {
   ]);
 
   api.export('BaseComponent');
+  // TODO: Move to a separate package. Possibly one with debugOnly set to true.
+  api.export('BaseComponentDebug');
 
   // Client.
   api.addFiles([
-    'lib.coffee'
+    'lib.coffee',
+    'debug.coffee'
   ], 'client');
 });
 
