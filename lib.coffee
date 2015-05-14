@@ -169,6 +169,7 @@ class BaseComponent
     @_componentName or null
 
   # We allow access to the component name through a method so that it can be accessed in templates in an easy way.
+  # It should never be overridden. The implementation should always be exactly the same as class method implementation.
   componentName: ->
     # Instance method is just a getter, not a setter as well.
     @constructor.componentName()
