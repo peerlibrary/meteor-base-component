@@ -178,10 +178,10 @@ class BaseComponent
   # nameOrComponent is optional and it limits the returned children only to those.
   componentChildren: (nameOrComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.componentChildren ?= new ReactiveVar [], arrayReferenceEquals
+    @_componentInternals.componentChildren ?= new ReactiveField [], arrayReferenceEquals
 
     # Quick path. Returns a shallow copy.
-    return (child for child in @_componentInternals.componentChildren.get()) unless nameOrComponent
+    return (child for child in @_componentInternals.componentChildren()) unless nameOrComponent
 
     if _.isString nameOrComponent
       @componentChildrenWith (child, parent) =>
@@ -223,18 +223,18 @@ class BaseComponent
 
   addComponentChild: (componentChild) ->
     @_componentInternals ?= {}
-    @_componentInternals.componentChildren ?= new ReactiveVar [], arrayReferenceEquals
-    @_componentInternals.componentChildren.set Tracker.nonreactive =>
-      @_componentInternals.componentChildren.get().concat [componentChild]
+    @_componentInternals.componentChildren ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.componentChildren Tracker.nonreactive =>
+      @_componentInternals.componentChildren().concat [componentChild]
 
     # To allow chaining.
     @
 
   removeComponentChild: (componentChild) ->
     @_componentInternals ?= {}
-    @_componentInternals.componentChildren ?= new ReactiveVar [], arrayReferenceEquals
-    @_componentInternals.componentChildren.set Tracker.nonreactive =>
-      _.without @_componentInternals.componentChildren.get(), componentChild
+    @_componentInternals.componentChildren ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.componentChildren Tracker.nonreactive =>
+      _.without @_componentInternals.componentChildren(), componentChild
 
     # To allow chaining.
     @
@@ -243,16 +243,16 @@ class BaseComponent
     @_componentInternals ?= {}
     # We use reference equality here. This makes reactivity not invalidate the
     # computation if the same component instance (by reference) is set as a parent.
-    @_componentInternals.componentParent ?= new ReactiveVar null, (a, b) -> a is b
+    @_componentInternals.componentParent ?= new ReactiveField null, (a, b) -> a is b
 
     # Setter.
     unless _.isUndefined componentParent
-      @_componentInternals.componentParent.set componentParent
+      @_componentInternals.componentParent componentParent
       # To allow chaining.
       return @
 
     # Getter.
-    @_componentInternals.componentParent.get()
+    @_componentInternals.componentParent()
 
   @renderComponent: (componentParent) ->
     throw new Error "Not implemented"

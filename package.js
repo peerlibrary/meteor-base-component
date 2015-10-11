@@ -19,7 +19,8 @@ Package.onUse(function (api) {
 
   // 3rd party dependencies.
   api.use([
-    'peerlibrary:assert@0.2.5'
+    'peerlibrary:assert@0.2.5',
+    'peerlibrary:reactive-field@0.1.0'
   ]);
 
   api.export('BaseComponent');
@@ -38,7 +39,8 @@ Package.onTest(function (api) {
     'coffeescript',
     'templating',
     'jquery',
-    'reactive-var'
+    'reactive-var',
+    'tracker'
   ]);
 
   // Internal dependencies.
