@@ -25,7 +25,7 @@ class BaseComponentDebug
     else
       @startComponent rootComponent
 
-    for child in rootComponent.componentChildren()
+    for child in rootComponent.childrenComponents()
       @dumpComponentSubtree child, _markComponent
 
     if marked
@@ -36,8 +36,8 @@ class BaseComponentDebug
     return
 
   @componentRoot: (component) ->
-    while componentParent = component.componentParent()
-      component = componentParent
+    while parentComponent = component.parentComponent()
+      component = parentComponent
 
     component
 

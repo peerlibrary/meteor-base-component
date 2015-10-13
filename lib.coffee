@@ -115,6 +115,12 @@ setComponent = (components, name, component) ->
   assert name not of namespace[components.constructor.COMPONENTS_FIELD]
   namespace[components.constructor.COMPONENTS_FIELD][name] = component
 
+componentChildrenDeprecationWarning = false
+componentChildrenWithDeprecationWarning = false
+addComponentChildDeprecationWarning = false
+removeComponentChildDeprecationWarning = false
+componentParentDeprecationWarning = false
+
 class BaseComponent
   @components: new ComponentsNamespace()
 
@@ -176,18 +182,18 @@ class BaseComponent
 
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # nameOrComponent is optional and it limits the returned children only to those.
-  componentChildren: (nameOrComponent) ->
+  childrenComponents: (nameOrComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.componentChildren ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.childrenComponents ?= new ReactiveField [], arrayReferenceEquals
 
     # Quick path. Returns a shallow copy.
-    return (child for child in @_componentInternals.componentChildren()) unless nameOrComponent
+    return (child for child in @_componentInternals.childrenComponents()) unless nameOrComponent
 
     if _.isString nameOrComponent
-      @componentChildrenWith (child, parent) =>
+      @childrenComponentsWith (child, parent) =>
         child.componentName() is nameOrComponent
     else
-      @componentChildrenWith (child, parent) =>
+      @childrenComponentsWith (child, parent) =>
         # nameOrComponent is a class.
         return true if child.constructor is nameOrComponent
 
@@ -198,7 +204,7 @@ class BaseComponent
 
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # Returns children which pass a predicate function.
-  componentChildrenWith: (propertyOrMatcherOrFunction) ->
+  childrenComponentsWith: (propertyOrMatcherOrFunction) ->
     if _.isString propertyOrMatcherOrFunction
       property = propertyOrMatcherOrFunction
       propertyOrMatcherOrFunction = (child, parent) =>
@@ -219,45 +225,45 @@ class BaseComponent
         true
 
     isolateValue =>
-      child for child in @componentChildren() when propertyOrMatcherOrFunction.call @, child, @
+      child for child in @childrenComponents() when propertyOrMatcherOrFunction.call @, child, @
 
-  addComponentChild: (componentChild) ->
+  addChildComponent: (childComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.componentChildren ?= new ReactiveField [], arrayReferenceEquals
-    @_componentInternals.componentChildren Tracker.nonreactive =>
-      @_componentInternals.componentChildren().concat [componentChild]
+    @_componentInternals.childrenComponents ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.childrenComponents Tracker.nonreactive =>
+      @_componentInternals.childrenComponents().concat [childComponent]
 
     # To allow chaining.
     @
 
-  removeComponentChild: (componentChild) ->
+  removeChildComponent: (childComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.componentChildren ?= new ReactiveField [], arrayReferenceEquals
-    @_componentInternals.componentChildren Tracker.nonreactive =>
-      _.without @_componentInternals.componentChildren(), componentChild
+    @_componentInternals.childrenComponents ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.childrenComponents Tracker.nonreactive =>
+      _.without @_componentInternals.childrenComponents(), childComponent
 
     # To allow chaining.
     @
 
-  componentParent: (componentParent) ->
+  parentComponent: (parentComponent) ->
     @_componentInternals ?= {}
     # We use reference equality here. This makes reactivity not invalidate the
     # computation if the same component instance (by reference) is set as a parent.
-    @_componentInternals.componentParent ?= new ReactiveField null, (a, b) -> a is b
+    @_componentInternals.parentComponent ?= new ReactiveField null, (a, b) -> a is b
 
     # Setter.
-    unless _.isUndefined componentParent
-      @_componentInternals.componentParent componentParent
+    unless _.isUndefined parentComponent
+      @_componentInternals.parentComponent parentComponent
       # To allow chaining.
       return @
 
     # Getter.
-    @_componentInternals.componentParent()
+    @_componentInternals.parentComponent()
 
-  @renderComponent: (componentParent) ->
+  @renderComponent: (parentComponent) ->
     throw new Error "Not implemented"
 
-  renderComponent: (componentParent) ->
+  renderComponent: (parentComponent) ->
     throw new Error "Not implemented"
 
   @extendComponent: (constructor, methods) ->
@@ -282,3 +288,46 @@ class BaseComponent
       constructor::[property] = value
 
     constructor
+
+  # Deprecated method names.
+  # TODO: Remove them in the future.
+
+  # @deprecated Use childrenComponents instead.
+  componentChildren: (args...) ->
+    unless componentChildrenDeprecationWarning
+      componentChildrenDeprecationWarning = true
+      console?.warn "componentChildren has been deprecated. Use childrenComponents instead."
+
+    @childrenComponents args...
+
+  # @deprecated Use childrenComponentsWith instead.
+  componentChildrenWith: (args...) ->
+    unless componentChildrenWithDeprecationWarning
+      componentChildrenWithDeprecationWarning = true
+      console?.warn "componentChildrenWith has been deprecated. Use childrenComponentsWith instead."
+
+    @childrenComponentsWith args...
+
+  # @deprecated Use addChildComponent instead.
+  addComponentChild: (args...) ->
+    unless addComponentChildDeprecationWarning
+      addComponentChildDeprecationWarning = true
+      console?.warn "addComponentChild has been deprecated. Use addChildComponent instead."
+
+    @addChildComponent args...
+
+  # @deprecated Use removeChildComponent instead.
+  removeComponentChild: (args...) ->
+    unless removeComponentChildDeprecationWarning
+      removeComponentChildDeprecationWarning = true
+      console?.warn "removeComponentChild has been deprecated. Use removeChildComponent instead."
+
+    @removeChildComponent args...
+
+  # @deprecated Use parentComponent instead.
+  componentParent: (args...) ->
+    unless componentParentDeprecationWarning
+      componentParentDeprecationWarning = true
+      console?.warn "componentParent has been deprecated. Use parentComponent instead."
+
+    @parentComponent args...
