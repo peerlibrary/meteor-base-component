@@ -14,36 +14,6 @@ arrayReferenceEquals = (a, b) ->
 
   true
 
-# Similar idea to https://github.com/awwx/meteor-isolate-value. We want to make
-# sure that internal reactive dependency inside function fn really changes the result
-# of function fn before we trigger an outside reactive computation invalidation. The
-# downside is that function fn is called twice if the result changes (once to
-# check if the outside reactive computation should be invalidated and the second time
-# when the outside reactive computation is rerun afterwards). Function fn should not
-# have any side effects.
-isolateValue = (fn) ->
-  # If not called in a reactive computation, do nothing special.
-  return fn() unless Tracker.active
-
-  lastValue = null
-  dependency = new Tracker.Dependency()
-
-  # This autorun is nested in the outside autorun so it gets stopped
-  # automatically when the outside autorun gets invalidated.
-  Tracker.autorun (computation) ->
-    value = fn()
-
-    if computation.firstRun
-      lastValue = value
-    else
-      # We use arrayReferenceEquals here for our use case, because
-      # we are using it with a component children array.
-      dependency.changed() unless arrayReferenceEquals value, lastValue
-
-  dependency.depend()
-
-  lastValue
-
 class ComponentsNamespace
   # We have a special field for components. This allows us to have the namespace with the same name
   # as a component, without overriding anything in the component (we do not want to use component
@@ -224,8 +194,12 @@ class BaseComponent
 
         true
 
-    isolateValue =>
+    results = new ComputedField =>
       child for child in @childrenComponents() when propertyOrMatcherOrFunction.call @, child, @
+    ,
+      arrayReferenceEquals
+
+    results()
 
   addChildComponent: (childComponent) ->
     @_componentInternals ?= {}
