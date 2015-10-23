@@ -89,7 +89,11 @@ componentChildrenDeprecationWarning = false
 componentChildrenWithDeprecationWarning = false
 addComponentChildDeprecationWarning = false
 removeComponentChildDeprecationWarning = false
+
 componentParentDeprecationWarning = false
+
+childrenComponentsDeprecationWarning = false
+childrenComponentsWithDeprecationWarning = false
 
 class BaseComponent
   @components: new ComponentsNamespace()
@@ -152,18 +156,18 @@ class BaseComponent
 
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # nameOrComponent is optional and it limits the returned children only to those.
-  childrenComponents: (nameOrComponent) ->
+  childComponents: (nameOrComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.childrenComponents ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.childComponents ?= new ReactiveField [], arrayReferenceEquals
 
     # Quick path. Returns a shallow copy.
-    return (child for child in @_componentInternals.childrenComponents()) unless nameOrComponent
+    return (child for child in @_componentInternals.childComponents()) unless nameOrComponent
 
     if _.isString nameOrComponent
-      @childrenComponentsWith (child, parent) =>
+      @childComponentsWith (child, parent) =>
         child.componentName() is nameOrComponent
     else
-      @childrenComponentsWith (child, parent) =>
+      @childComponentsWith (child, parent) =>
         # nameOrComponent is a class.
         return true if child.constructor is nameOrComponent
 
@@ -174,7 +178,7 @@ class BaseComponent
 
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # Returns children which pass a predicate function.
-  childrenComponentsWith: (propertyOrMatcherOrFunction) ->
+  childComponentsWith: (propertyOrMatcherOrFunction) ->
     if _.isString propertyOrMatcherOrFunction
       property = propertyOrMatcherOrFunction
       propertyOrMatcherOrFunction = (child, parent) =>
@@ -195,7 +199,7 @@ class BaseComponent
         true
 
     results = new ComputedField =>
-      child for child in @childrenComponents() when propertyOrMatcherOrFunction.call @, child, @
+      child for child in @childComponents() when propertyOrMatcherOrFunction.call @, child, @
     ,
       arrayReferenceEquals
 
@@ -203,18 +207,18 @@ class BaseComponent
 
   addChildComponent: (childComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.childrenComponents ?= new ReactiveField [], arrayReferenceEquals
-    @_componentInternals.childrenComponents Tracker.nonreactive =>
-      @_componentInternals.childrenComponents().concat [childComponent]
+    @_componentInternals.childComponents ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.childComponents Tracker.nonreactive =>
+      @_componentInternals.childComponents().concat [childComponent]
 
     # To allow chaining.
     @
 
   removeChildComponent: (childComponent) ->
     @_componentInternals ?= {}
-    @_componentInternals.childrenComponents ?= new ReactiveField [], arrayReferenceEquals
-    @_componentInternals.childrenComponents Tracker.nonreactive =>
-      _.without @_componentInternals.childrenComponents(), childComponent
+    @_componentInternals.childComponents ?= new ReactiveField [], arrayReferenceEquals
+    @_componentInternals.childComponents Tracker.nonreactive =>
+      _.without @_componentInternals.childComponents(), childComponent
 
     # To allow chaining.
     @
@@ -266,21 +270,21 @@ class BaseComponent
   # Deprecated method names.
   # TODO: Remove them in the future.
 
-  # @deprecated Use childrenComponents instead.
+  # @deprecated Use childComponents instead.
   componentChildren: (args...) ->
     unless componentChildrenDeprecationWarning
       componentChildrenDeprecationWarning = true
-      console?.warn "componentChildren has been deprecated. Use childrenComponents instead."
+      console?.warn "componentChildren has been deprecated. Use childComponents instead."
 
-    @childrenComponents args...
+    @childComponents args...
 
-  # @deprecated Use childrenComponentsWith instead.
+  # @deprecated Use childComponentsWith instead.
   componentChildrenWith: (args...) ->
     unless componentChildrenWithDeprecationWarning
       componentChildrenWithDeprecationWarning = true
-      console?.warn "componentChildrenWith has been deprecated. Use childrenComponentsWith instead."
+      console?.warn "componentChildrenWith has been deprecated. Use childComponentsWith instead."
 
-    @childrenComponentsWith args...
+    @childComponentsWith args...
 
   # @deprecated Use addChildComponent instead.
   addComponentChild: (args...) ->
@@ -305,3 +309,19 @@ class BaseComponent
       console?.warn "componentParent has been deprecated. Use parentComponent instead."
 
     @parentComponent args...
+
+  # @deprecated Use childComponents instead.
+  childrenComponents: (args...) ->
+    unless componentChildrenDeprecationWarning
+      componentChildrenDeprecationWarning = true
+      console?.warn "childrenComponents has been deprecated. Use childComponents instead."
+
+    @childComponents args...
+
+  # @deprecated Use childComponentsWith instead.
+  childrenComponentsWith: (args...) ->
+    unless componentChildrenWithDeprecationWarning
+      componentChildrenWithDeprecationWarning = true
+      console?.warn "childrenComponentsWith has been deprecated. Use childComponentsWith instead."
+
+    @childComponentsWith args...

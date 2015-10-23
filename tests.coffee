@@ -136,40 +136,40 @@ class BasicTestCase extends ClassyTestCase
 
     results = []
     handle = Tracker.autorun =>
-      results.push parentComponent.childrenComponents()
+      results.push parentComponent.childComponents()
 
     resultsWith = []
     handleWith = Tracker.autorun =>
-      resultsWith.push parentComponent.childrenComponentsWith(field: 'foobar')
+      resultsWith.push parentComponent.childComponentsWith(field: 'foobar')
 
     component.parentComponent parentComponent
     parentComponent.addChildComponent component
 
     @assertEqual component.parentComponent(), parentComponent
-    @assertEqual parentComponent.childrenComponents(), [component]
-    @assertEqual parentComponent.childrenComponents(component), [component]
-    @assertEqual parentComponent.childrenComponents(parentComponent), []
-    @assertEqual parentComponent.childrenComponents(DummyComponent), [component]
-    @assertEqual parentComponent.childrenComponents(UnregisteredComponent), []
-    @assertEqual parentComponent.childrenComponents('DummyComponent'), [component]
-    @assertEqual parentComponent.childrenComponents('UnregisteredComponent'), []
-    @assertEqual parentComponent.childrenComponentsWith('field'), [component]
-    @assertEqual parentComponent.childrenComponentsWith('fieldValue'), [component]
-    @assertEqual parentComponent.childrenComponentsWith('nonexisting'), []
-    @assertEqual parentComponent.childrenComponentsWith(field: 'foobar'), [component]
-    @assertEqual parentComponent.childrenComponentsWith(field: 'faabar'), []
-    @assertEqual parentComponent.childrenComponentsWith(fieldValue: 'foobar'), [component]
-    @assertEqual parentComponent.childrenComponentsWith(fieldValue: 'faabar'), []
+    @assertEqual parentComponent.childComponents(), [component]
+    @assertEqual parentComponent.childComponents(component), [component]
+    @assertEqual parentComponent.childComponents(parentComponent), []
+    @assertEqual parentComponent.childComponents(DummyComponent), [component]
+    @assertEqual parentComponent.childComponents(UnregisteredComponent), []
+    @assertEqual parentComponent.childComponents('DummyComponent'), [component]
+    @assertEqual parentComponent.childComponents('UnregisteredComponent'), []
+    @assertEqual parentComponent.childComponentsWith('field'), [component]
+    @assertEqual parentComponent.childComponentsWith('fieldValue'), [component]
+    @assertEqual parentComponent.childComponentsWith('nonexisting'), []
+    @assertEqual parentComponent.childComponentsWith(field: 'foobar'), [component]
+    @assertEqual parentComponent.childComponentsWith(field: 'faabar'), []
+    @assertEqual parentComponent.childComponentsWith(fieldValue: 'foobar'), [component]
+    @assertEqual parentComponent.childComponentsWith(fieldValue: 'faabar'), []
 
     self = @
 
-    @assertEqual parentComponent.childrenComponentsWith(
+    @assertEqual parentComponent.childComponentsWith(
       (child) ->
         self.assertEqual @, parentComponent
         self.assertEqual child, component
         true
     ), [component]
-    @assertEqual parentComponent.childrenComponentsWith((child) -> false), []
+    @assertEqual parentComponent.childComponentsWith((child) -> false), []
 
     Tracker.flush()
 
@@ -177,19 +177,19 @@ class BasicTestCase extends ClassyTestCase
     parentComponent.removeChildComponent component
 
     @assertEqual component.parentComponent(), null
-    @assertEqual parentComponent.childrenComponents(), []
-    @assertEqual parentComponent.childrenComponents(component), []
-    @assertEqual parentComponent.childrenComponents(DummyComponent), []
-    @assertEqual parentComponent.childrenComponents(UnregisteredComponent), []
-    @assertEqual parentComponent.childrenComponents('DummyComponent'), []
-    @assertEqual parentComponent.childrenComponents('UnregisteredComponent'), []
-    @assertEqual parentComponent.childrenComponentsWith('field'), []
-    @assertEqual parentComponent.childrenComponentsWith('fieldValue'), []
-    @assertEqual parentComponent.childrenComponentsWith('nonexisting'), []
-    @assertEqual parentComponent.childrenComponentsWith(field: 'foobar'), []
-    @assertEqual parentComponent.childrenComponentsWith(field: 'faabar'), []
-    @assertEqual parentComponent.childrenComponentsWith(fieldValue: 'foobar'), []
-    @assertEqual parentComponent.childrenComponentsWith(fieldValue: 'faabar'), []
+    @assertEqual parentComponent.childComponents(), []
+    @assertEqual parentComponent.childComponents(component), []
+    @assertEqual parentComponent.childComponents(DummyComponent), []
+    @assertEqual parentComponent.childComponents(UnregisteredComponent), []
+    @assertEqual parentComponent.childComponents('DummyComponent'), []
+    @assertEqual parentComponent.childComponents('UnregisteredComponent'), []
+    @assertEqual parentComponent.childComponentsWith('field'), []
+    @assertEqual parentComponent.childComponentsWith('fieldValue'), []
+    @assertEqual parentComponent.childComponentsWith('nonexisting'), []
+    @assertEqual parentComponent.childComponentsWith(field: 'foobar'), []
+    @assertEqual parentComponent.childComponentsWith(field: 'faabar'), []
+    @assertEqual parentComponent.childComponentsWith(fieldValue: 'foobar'), []
+    @assertEqual parentComponent.childComponentsWith(fieldValue: 'faabar'), []
 
     Tracker.flush()
 

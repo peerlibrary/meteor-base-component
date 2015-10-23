@@ -25,7 +25,7 @@ class BaseComponentDebug
     else
       @startComponent rootComponent
 
-    for child in rootComponent.childrenComponents()
+    for child in rootComponent.childComponents()
       @dumpComponentSubtree child, _markComponent
 
     if marked
