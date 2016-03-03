@@ -215,6 +215,8 @@ class BaseComponent
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # Returns children which pass a predicate function.
   childComponentsWith: (propertyOrMatcherOrFunction) ->
+    assert propertyOrMatcherOrFunction
+
     propertyOrMatcherOrFunction = createMatcher propertyOrMatcherOrFunction
 
     results = new ComputedField =>
