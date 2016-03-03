@@ -14,6 +14,28 @@ arrayReferenceEquals = (a, b) ->
 
   true
 
+createMatcher = (propertyOrMatcherOrFunction) ->
+  if _.isString propertyOrMatcherOrFunction
+    property = propertyOrMatcherOrFunction
+    propertyOrMatcherOrFunction = (child, parent) =>
+      property of child
+
+  else if not _.isFunction propertyOrMatcherOrFunction
+    assert _.isObject propertyOrMatcherOrFunction
+    matcher = propertyOrMatcherOrFunction
+    propertyOrMatcherOrFunction = (child, parent) =>
+      for property, value of matcher
+        return false unless property of child
+
+        if _.isFunction child[property]
+          return false unless child[property]() is value
+        else
+          return false unless child[property] is value
+
+      true
+
+  propertyOrMatcherOrFunction
+
 class ComponentsNamespace
   # We have a special field for components. This allows us to have the namespace with the same name
   # as a component, without overriding anything in the component (we do not want to use component
@@ -179,24 +201,7 @@ class BaseComponent
   # The order of components is arbitrary and does not necessary match siblings relations in DOM.
   # Returns children which pass a predicate function.
   childComponentsWith: (propertyOrMatcherOrFunction) ->
-    if _.isString propertyOrMatcherOrFunction
-      property = propertyOrMatcherOrFunction
-      propertyOrMatcherOrFunction = (child, parent) =>
-        property of child
-
-    else if not _.isFunction propertyOrMatcherOrFunction
-      assert _.isObject propertyOrMatcherOrFunction
-      matcher = propertyOrMatcherOrFunction
-      propertyOrMatcherOrFunction = (child, parent) =>
-        for property, value of matcher
-          return false unless property of child
-
-          if _.isFunction child[property]
-            return false unless child[property]() is value
-          else
-            return false unless child[property] is value
-
-        true
+    propertyOrMatcherOrFunction = createMatcher propertyOrMatcherOrFunction
 
     results = new ComputedField =>
       child for child in @childComponents() when propertyOrMatcherOrFunction.call @, child, @
