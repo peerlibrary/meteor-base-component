@@ -14,37 +14,23 @@ arrayReferenceEquals = (a, b) ->
 
   true
 
-# TODO: Deduplicate between base component, blaze component, and common component packages.
 createMatcher = (propertyOrMatcherOrFunction) ->
   if _.isString propertyOrMatcherOrFunction
     property = propertyOrMatcherOrFunction
     propertyOrMatcherOrFunction = (child, parent) =>
-      # If child is parent, we might get into an infinite loop if this is
-      # called from getFirstWith, so in that case we do not use getFirstWith.
-      # TODO: Leaky abstraction here. getFirstWith is not part of base component.
-      if child isnt parent and child.getFirstWith
-        !!child.getFirstWith null, property
-      else
-        property of child
+      property of child
 
   else if not _.isFunction propertyOrMatcherOrFunction
     assert _.isObject propertyOrMatcherOrFunction
     matcher = propertyOrMatcherOrFunction
     propertyOrMatcherOrFunction = (child, parent) =>
       for property, value of matcher
-        # If child is parent, we might get into an infinite loop if this is
-        # called from getFirstWith, so in that case we do not use getFirstWith.
-        # TODO: Leaky abstraction here. getFirstWith is not part of base component.
-        if child isnt parent and child.getFirstWith
-          childWithProperty = child.getFirstWith null, property
-        else
-          childWithProperty = child if property of child
-        return false unless childWithProperty
+        return false unless property of child
 
-        if _.isFunction childWithProperty[property]
-          return false unless childWithProperty[property]() is value
+        if _.isFunction child[property]
+          return false unless child[property]() is value
         else
-          return false unless childWithProperty[property] is value
+          return false unless child[property] is value
 
       true
 
