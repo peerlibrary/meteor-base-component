@@ -1,5 +1,6 @@
 class DummyComponent extends BaseComponent
   constructor: (field) ->
+    super()
     @field = field
 
   fieldValue: ->
